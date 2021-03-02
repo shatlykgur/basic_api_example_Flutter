@@ -1,71 +1,66 @@
+import 'dart:convert';
+import 'package:basic_api_example/model/loadData.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-void main() {
-  runApp(MyApp());
+void main() => runApp(MyApp());
+
+Future<LoadData> apiCall() async {
+  final response = await http.get(
+    'https://raw.githubusercontent.com/shatlykgur/basic_api_example_Flutter/main/api.json',
+  );
+  if (response.statusCode == 200) {
+    return LoadData.fromJson(json.decode(response.body));
+  } else {
+    throw Exception('Failed to load');
+  }
 }
 
 class MyApp extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
-      appBar: AppBar(
-      
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-        
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ),
+      body: FutureBuilder<LoadData>(
+          future: apiCall(),
+          // ignore: missing_return
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return Container(
+                child: Center(
+                  child: Text(
+                    "User Name: ${snapshot.data.username} \n" +
+                        "E Mail: ${snapshot.data.email}",
+                    style: TextStyle(
+                        color: Colors.blue, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              );
+            } else {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          }),
     );
   }
 }
